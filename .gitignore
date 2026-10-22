@@ -1,0 +1,30 @@
+# Provider plugins downloaded by terraform init. Rebuilt locally, not committed.
+.terraform/
+
+# Terraform's memory of what it created. Holds resource IDs and the test user's
+# password. Never commit it.
+*.tfstate
+*.tfstate.*
+
+# Written when Terraform crashes. May contain a partial state snapshot.
+crash.log
+crash.*.log
+
+# Variable files are the usual place a password, email address, or subscription id would land.
+*.tfvars
+*.tfvars.json
+
+# Local-only overrides. Not part of the shared configuration.
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Environment files. The budget alert address and the test user's password
+# are supplied from the environment, not from a committed file.
+.env
+.env.*
+
+keys/
+*.pem
+.DS_Store
