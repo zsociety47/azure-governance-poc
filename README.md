@@ -44,7 +44,7 @@ The password has to meet Microsoft Entra ID's rules: at least 8 characters, with
 
 `terraform init` downloads the providers into `.terraform/`. `terraform apply` writes `terraform.tfstate`. The state file holds the test user's password and resource identifiers. Both the state file and `.terraform/` are ignored. `.terraform.lock.hcl` is not ignored.
 
-<!-- ![.gitignore listing the state file and the provider folder](docs/images/step-01-gitignore.png) -->
+![.gitignore excluding the state file and the provider folder](docs/images/step-01-gitignore.png)
 
 ### Step 2: Pin the providers
 
@@ -58,7 +58,7 @@ terraform init
 
 The last line should be `Terraform has been successfully initialized!`
 
-<!-- ![terraform init finished and the lock file written](docs/images/step-02-init.png) -->
+![terraform init finished with the success line](docs/images/step-02-init.png)
 
 ### Step 3: Sign in without storing the subscription id
 
@@ -66,7 +66,7 @@ The last line should be `Terraform has been successfully initialized!`
 
 The providers use the Azure CLI login already on the machine. There is no `subscription_id` line in the file. `resource_provider_registrations = "none"` means apply does not register Azure resource providers. `Microsoft.Authorization` and `Microsoft.Consumption` are already registered.
 
-<!-- ![provider block with no subscription id](docs/images/step-03-provider.png) -->
+![provider blocks with no subscription id](docs/images/step-03-provider.png)
 
 ### Step 4: Put the names in one place
 
@@ -86,7 +86,9 @@ The providers use the Azure CLI login already on the machine. There is no `subsc
 
 The password and the alert address are not in this table. They come from `.env`.
 
-<!-- ![variables.tf with the names and the allow list](docs/images/step-04-names.png) -->
+![variables.tf with the resource group name](docs/images/step-04-names.png)
+
+![variables.tf with the two allowed virtual machine sizes](docs/images/step-04-sizes.png)
 
 ### Step 5: Create the resource group
 
@@ -100,7 +102,7 @@ Every control in this build is scoped to `rg-gov-poc-zeon01`. The first plan, be
 
 The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The domain is not written in the repository. `only_default = true` keeps the list to one domain, and the check fails the plan if that list is not exactly one entry. With only this file added, the plan is no changes.
 
-<!-- ![plan with no changes for the domain lookup](docs/images/step-06-domain.png) -->
+![domain lookup with no domain name stored in the file](docs/images/step-06-domain.png)
 
 ### Step 7: Create the test user
 
@@ -108,7 +110,7 @@ The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The doma
 
 `user_principal_name` joins the mail nickname to the domain from step 6. `account_enabled` is true. `show_in_address_list` is false, so the test account is not listed as a person. The plan is `1 to add`. The password line is sensitive. Do not paste the sign-in name into notes. It contains the tenant domain.
 
-<!-- ![plan creating Junior Developer, with the password hidden](docs/images/step-07-user.png) -->
+![test user resource with the password kept in a variable](docs/images/step-07-user.png)
 
 ### Step 8: Grant Reader on this group only
 
@@ -116,7 +118,7 @@ The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The doma
 
 `scope` is `rg-gov-poc-zeon01`. `principal_id` is the user's object id. Reader can look at resources in this group. It cannot create, change, or delete them. The plan is `1 to add`. The role does not extend to the subscription.
 
-<!-- ![plan granting Reader on rg-gov-poc-zeon01](docs/images/step-08-reader.png) -->
+![Reader role scoped to the resource group](docs/images/step-08-reader.png)
 
 ### Step 9: Deny every other virtual machine size
 
@@ -124,7 +126,7 @@ The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The doma
 
 The built-in policy is "Allowed virtual machine size SKUs." Its effect is Deny. `enforce = true` means Azure applies that deny. The allow list is `Standard_F1als_v7` and `Standard_F1as_v7`. The plan is `1 to add`. No virtual machine is created.
 
-<!-- ![plan for restrict-vm-sizes with the two allowed sizes](docs/images/step-09-policy.png) -->
+![size policy enforced with the allow-list variable](docs/images/step-09-policy.png)
 
 ### Step 10: Alert before the month's limit
 
@@ -132,13 +134,89 @@ The built-in policy is "Allowed virtual machine size SKUs." Its effect is Deny. 
 
 `monthly-gov-budget` is 50 US dollars per month, starting on the first day of October 2026. Azure requires that start date to be the first day of a month. One alert fires when actual spend reaches 80 percent. The other fires when the forecast reaches 100 percent. Both go to the address in `.env`. The plan hides those blocks because the address is sensitive. The plan is `1 to add`. A budget sends email. It does not stop spending.
 
-<!-- ![plan for monthly-gov-budget with the amount 50](docs/images/step-10-budget.png) -->
+![budget name, amount 50, and no alert address in the file](docs/images/step-10-amount.png)
+
+![budget resource with the alert address kept in a variable](docs/images/step-10-budget.png)
 
 ### Step 11: Check the live controls
 
-*Run `./scripts/verify.sh`.*
+*Read each guardrail from Azure, then run `./scripts/verify.sh`.*
 
-The script reads Azure and prints nine lines. It does not create or delete anything. The size checks ask policy what it would do with a virtual machine. They do not create one.
+The commands below ask Azure the same questions the script asks. They do not create a virtual machine. Crop each result to the table or the JSON. Do not include a line that contains `/subscriptions/`. Do not drop the `--query` flags. Without them, the sign-in name or the alert address can print.
+
+The test user is enabled, and the mail nickname is `junior-dev-zeon`. This query does not ask for the sign-in name.
+
+```bash
+az rest --method get \
+  --url "https://graph.microsoft.com/v1.0/users?\$filter=displayName eq 'Junior Developer'&\$select=displayName,accountEnabled,mailNickname" \
+  --query "value[].{name:displayName, enabled:accountEnabled, nickname:mailNickname}" \
+  -o table
+```
+
+![Junior Developer is enabled, mail nickname junior-dev-zeon](docs/images/step-11-user.png)
+
+The only role on `rg-gov-poc-zeon01` is Reader, and it is a user. Reader can look. It cannot create, change, or delete.
+
+```bash
+az role assignment list \
+  --resource-group rg-gov-poc-zeon01 \
+  --query "[].{role:roleDefinitionName, kind:principalType}" \
+  -o table
+```
+
+![Reader is the only role on rg-gov-poc-zeon01](docs/images/step-11-role.png)
+
+The policy assignment is `restrict-vm-sizes`. `Default` means the deny is turned on. The allow list is the two small sizes.
+
+```bash
+az policy assignment list \
+  --resource-group rg-gov-poc-zeon01 \
+  --query "[].{name:name, enforcement:enforcementMode, sizes:parameters.listOfAllowedSKUs.value}" \
+  -o json
+```
+
+![restrict-vm-sizes allows the two small sizes](docs/images/step-11-policy.png)
+
+The budget is 50 US dollars a month. One alert is at 80 percent of actual spend. The other is at 100 percent of the forecast. The address is not in this result.
+
+```bash
+az rest --method get \
+  --url "$(az group show --name rg-gov-poc-zeon01 --query id -o tsv)/providers/Microsoft.Consumption/budgets/monthly-gov-budget?api-version=2023-05-01" \
+  --query "{amount:properties.amount, monthly:properties.timeGrain, alerts:properties.notifications.*.{at:threshold, when:thresholdType}}" \
+  -o json
+```
+
+![monthly-gov-budget is 50 dollars with both alerts](docs/images/step-11-budget.png)
+
+Ask what policy would do with a sixteen-core size. The result is one row: `restrict-vm-sizes`, `NonCompliant`, `Deny`. No virtual machine is created.
+
+```bash
+az rest --method post \
+  --url "$(az group show --name rg-gov-poc-zeon01 --query id -o tsv)/providers/Microsoft.PolicyInsights/checkPolicyRestrictions?api-version=2024-10-01" \
+  --body '{"resourceDetails":{"apiVersion":"2024-07-01","resourceContent":{"type":"Microsoft.Compute/virtualMachines","location":"eastus","properties":{"hardwareProfile":{"vmSize":"Standard_F16als_v7"}}}}}' \
+  --query "contentEvaluationResult.policyEvaluations[?policyInfo.policyAssignmentName=='restrict-vm-sizes'].{assignment:policyInfo.policyAssignmentName, result:evaluationResult, effect:effectDetails.policyEffect}" \
+  -o table
+```
+
+![Standard_F16als_v7 is denied by restrict-vm-sizes](docs/images/step-11-denied.png)
+
+Ask again with `Standard_F1als_v7`. That command prints no rows, because the small size is not denied. Then count virtual machines in the group. The count is `0`.
+
+```bash
+az rest --method post \
+  --url "$(az group show --name rg-gov-poc-zeon01 --query id -o tsv)/providers/Microsoft.PolicyInsights/checkPolicyRestrictions?api-version=2024-10-01" \
+  --body '{"resourceDetails":{"apiVersion":"2024-07-01","resourceContent":{"type":"Microsoft.Compute/virtualMachines","location":"eastus","properties":{"hardwareProfile":{"vmSize":"Standard_F1als_v7"}}}}}' \
+  --query "contentEvaluationResult.policyEvaluations[?policyInfo.policyAssignmentName=='restrict-vm-sizes'].{assignment:policyInfo.policyAssignmentName, result:evaluationResult, effect:effectDetails.policyEffect}" \
+  -o table
+```
+
+```bash
+az vm list --resource-group rg-gov-poc-zeon01 --query "length(@)" -o tsv
+```
+
+![Standard_F1als_v7 is not denied, and the group has no virtual machine](docs/images/step-11-allowed.png)
+
+The script checks those same facts and prints nine lines.
 
 ```bash
 ./scripts/verify.sh
@@ -158,7 +236,7 @@ A passing run looks like this:
 9  terraform plan reports no changes: PASS
 ```
 
-<!-- ![Verify script with nine PASS lines](docs/images/step-11-verify.png) -->
+![Verify script with nine PASS lines](docs/images/step-11-verify.png)
 
 ### Step 12: Remove it
 
@@ -172,7 +250,9 @@ The script prints what it will delete and stops unless the typed name is `rg-gov
 
 The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, `rg-gov-poc-zeon01` is gone. Run `./scripts/verify.sh` once more and all nine lines print `FAIL`. That is the expected result. There is nothing left for the checks to find, and the next plan wants to add the five resources again.
 
-<!-- ![Destroy complete, five resources removed](docs/images/step-12-destroy.png) -->
+![Destroy complete, five resources removed](docs/images/step-12-destroy.png)
+
+![The next plan adds the five resources again](docs/images/step-12-plan.png)
 
 ---
 
