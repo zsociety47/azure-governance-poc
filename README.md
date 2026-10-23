@@ -258,23 +258,83 @@ The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finish
 
 ## Automated setup
 
-You need Terraform 1.15.x, the Azure CLI, and a current `az login`. From the repository root, create `.env` as in the project steps, then:
+You need Terraform 1.15.x, the Azure command-line interface (CLI), and a current `az login`. Run these from the repository root, in this order. Each group is one action. Read what you should see before you start the next group.
+
+If Microsoft Entra ID asks for multi-factor authentication, approve it in the browser. Do not add `--use-device-code` to `az login`. That flow is often blocked when the computer is not registered with Entra ID.
+
+### Sign in for this terminal
+
+The subscription stays in this terminal session. The password and the alert address come from `.env`, which is gitignored. Nothing here is written into a file.
 
 ```bash
 export ARM_SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
 set -a
 source .env
 set +a
+```
+
+You should see no output. Do not print either value.
+
+### Download the providers
+
+This is step 2. It runs once per machine.
+
+```bash
 terraform init
+```
+
+The last line should be `Terraform has been successfully initialized!`
+
+### Read the plan
+
+Every file is already in the folder, so this one plan covers steps 5 through 10. The domain lookup creates nothing.
+
+```bash
 terraform plan
+```
+
+You should see `5 to add, 0 to change, 0 to destroy`: the resource group, the test user, the Reader role, the size policy, and the budget. Read the plan before you type `yes`. A line that contains `/subscriptions/` is not a screenshot.
+
+### Create the five controls
+
+```bash
 terraform apply
+```
+
+Type `yes` only if the plan still says `5 to add`. The size policy takes about two minutes.
+
+### Read each guardrail
+
+These are the commands in step 11, in the same order. Run one, read the result, then run the next. None of them creates a virtual machine.
+
+| Command in step 11 | What you are checking | A pass looks like |
+|---|---|---|
+| The user query | The test account is on and usable | `Junior Developer`, enabled, nickname `junior-dev-zeon` |
+| The role query | Who can touch this group | One row: `Reader`, `User` |
+| The policy query | Which sizes are allowed | `restrict-vm-sizes`, enforcement `Default`, the two small sizes |
+| The budget query | What the month is allowed to cost | Amount `50`, monthly, alerts at `80` Actual and `100` Forecasted. No address |
+| The large-size query | The rule blocks an oversized machine | One row: `restrict-vm-sizes`, `NonCompliant`, `Deny` |
+| The small-size query, then the machine count | The allowed size is accepted, and no machine exists | No deny row, then `0` |
+
+### Confirm with the script
+
+The script checks those same facts and prints one line each.
+
+```bash
 ./scripts/verify.sh
+```
+
+You should see nine `PASS` lines.
+
+### Remove it
+
+This is step 12. The script stops unless the typed name is `rg-gov-poc-zeon01`. Terraform then asks for `yes` on its own.
+
+```bash
 ./scripts/teardown.sh
 ```
 
-`terraform init` is once per machine. With every file present, the first plan is `5 to add, 0 to change, 0 to destroy`: the resource group, the user, the Reader role, the size policy, and the budget. The domain lookup creates nothing. Type `yes` only after you have read the plan. `./scripts/verify.sh` is step 11. `./scripts/teardown.sh` is step 12. It asks for the resource group name, and `terraform destroy` asks for `yes` on its own.
-
-If Microsoft Entra ID asks for multi-factor authentication, approve it in the browser. Do not add `--use-device-code` to `az login`. That flow is often blocked when the computer is not registered with Entra ID.
+The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, the last line is `Destroy complete! Resources: 5 destroyed.` The next plan is `5 to add` again. Leave any `/subscriptions/` line out of a screenshot.
 
 ### Prove it in the portal
 
