@@ -2,7 +2,7 @@
 
 ## Watch the walkthrough
 
-The walkthrough is not recorded yet.
+[Watch the video](https://www.loom.com/share/6f35ccb43dbb4a57b4905d501d9b9163)
 
 **Author:** Zeon Stewart, [LinkedIn](LINKEDIN_LINK_HERE)
 
