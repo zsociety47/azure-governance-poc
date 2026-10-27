@@ -258,6 +258,10 @@ The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finish
 
 ## Automated setup
 
+### Run this as yourself
+
+The names in `variables.tf` are this proof of concept. Copy `terraform.tfvars.example` to `terraform.tfvars` (gitignored). Change `resource_group_name`, `user_mail_nickname`, and `tags.owner`. The mail nickname must be unique in your tenant. Put your owner word in it. Keep supplying the password and the alert address from `.env`, not from a committed file.
+
 You need Terraform 1.15.x, the Azure command-line interface (CLI), and a current `az login`. Run these from the repository root, in this order. Each group is one action. Read what you should see before you start the next group.
 
 If Microsoft Entra ID asks for multi-factor authentication, approve it in the browser. Do not add `--use-device-code` to `az login`. That flow is often blocked when the computer is not registered with Entra ID.

@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars (gitignored). Defaults in variables.tf are this
+# proof of concept. Change the resource group, the mail nickname, and owner.
+# Do not put the password or the alert address here. Those stay in .env.
+
+resource_group_name = "rg-gov-poc-yourname01"
+user_mail_nickname  = "junior-dev-yourname"
+
+tags = {
+  project     = "azure-governance-poc"
+  environment = "poc"
+  managed-by  = "terraform"
+  owner       = "yourname"
+}
