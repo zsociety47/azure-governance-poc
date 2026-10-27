@@ -260,7 +260,17 @@ The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finish
 
 ### Run this as yourself
 
-The names in `variables.tf` are this proof of concept. Copy `terraform.tfvars.example` to `terraform.tfvars` (gitignored). Change `resource_group_name`, `user_mail_nickname`, and `tags.owner`. The mail nickname must be unique in your tenant. Put your owner word in it. Keep supplying the password and the alert address from `.env`, not from a committed file.
+The names committed in this repository are this proof of concept. Leave [`variables.tf`](variables.tf). Put your owner word in the copy you run. The sequence is the same as the [naming standard](https://github.com/zsociety47/cloud-projects/blob/main/standards/NAMING-STANDARD.md): type, project, environment, then **your** owner word and number (`rg-gov-poc-zeon01` becomes `rg-gov-poc-ada01`).
+
+| Open this | Do this |
+|---|---|
+| [`terraform.tfvars.example`](terraform.tfvars.example) | Copy to `terraform.tfvars` (gitignored). Change `resource_group_name`, `user_mail_nickname`, and `tags.owner`. The mail nickname must be unique in your tenant. Put your owner word in it. |
+| `.env` | Create it in this folder (gitignored). Copy the two `TF_VAR_` lines from [Project Steps](#project-steps). Put your password and alert address there, not in `terraform.tfvars`. |
+| [`variables.tf`](variables.tf) | Read only. These defaults are this proof. |
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
 
 You need Terraform 1.15.x, the Azure command-line interface (CLI), and a current `az login`. Run these from the repository root, in this order. Each group is one action. Read what you should see before you start the next group.
 
