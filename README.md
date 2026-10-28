@@ -8,9 +8,9 @@
 
 ## At a glance
 
-- **What it is:** one resource group with three guardrails. A test user can only read it. Policy denies any virtual machine size that is not on a two-name allow list. A budget sends email as spend nears 50 US dollars.
+- **What it is:** one resource group with three guardrails. A test user can only read it. Policy denies any virtual machine size that isn't on a two-name allow list. A budget sends email as spend nears 50 US dollars.
 - **What's automated:** Terraform creates the group, the user, the role, the policy, and the budget. `./scripts/verify.sh` checks them. `./scripts/teardown.sh` removes them after the resource group name is typed.
-- **Why it's secure:** the test user is Reader on this group only. The password and the alert address are not in the repository. No virtual machine is created.
+- **Why it's secure:** the test user is Reader on this group only. The password and the alert address aren't in the repository. No virtual machine is created.
 - **Result:** all nine checks passed while the group was up. `Standard_F16als_v7` was denied. `terraform destroy` then removed five resources. The group is gone.
 
 Part of [Cloud Projects](https://github.com/zsociety47/cloud-projects). Technical details are in [Technical findings](#technical-findings) at the bottom.
@@ -36,13 +36,13 @@ TF_VAR_user_password='your-password'
 TF_VAR_budget_alert_email='your-address'
 ```
 
-The password has to meet Microsoft Entra ID's rules: at least 8 characters, with uppercase, lowercase, a number, and a symbol. Do not commit `.env`.
+The password has to meet Microsoft Entra ID's rules: at least 8 characters, with uppercase, lowercase, a number, and a symbol. Don't commit `.env`.
 
 ### Step 1: Keep the state file off GitHub
 
 *Declared in `.gitignore`, before `terraform init` or `terraform apply`.*
 
-`terraform init` downloads the providers into `.terraform/`. `terraform apply` writes `terraform.tfstate`. The state file holds the test user's password and resource identifiers. Both the state file and `.terraform/` are ignored. `.terraform.lock.hcl` is not ignored.
+`terraform init` downloads the providers into `.terraform/`. `terraform apply` writes `terraform.tfstate`. The state file holds the test user's password and resource identifiers. Both the state file and `.terraform/` are ignored. `.terraform.lock.hcl` isn't ignored.
 
 ![.gitignore excluding the state file and the provider folder](docs/images/step-01-gitignore.png)
 
@@ -84,7 +84,7 @@ The providers use the Azure CLI login already on the machine. There is no `subsc
 | Budget | `monthly-gov-budget`, 50 US dollars |
 | Alerts | 80 percent of actual spend, 100 percent of the forecast |
 
-The password and the alert address are not in this table. They come from `.env`.
+The password and the alert address aren't in this table. They come from `.env`.
 
 ![variables.tf with the resource group name](docs/images/step-04-names.png)
 
@@ -100,7 +100,7 @@ Every control in this build is scoped to `rg-gov-poc-zeon01`. The first plan, be
 
 *Declared in `domain.tf`. Read by the user file. It creates nothing.*
 
-The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The domain is not written in the repository. `only_default = true` keeps the list to one domain, and the check fails the plan if that list is not exactly one entry. With only this file added, the plan is no changes.
+The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The domain isn't written in the repository. `only_default = true` keeps the list to one domain, and the check fails the plan if that list isn't exactly one entry. With only this file added, the plan is no changes.
 
 ![domain lookup with no domain name stored in the file](docs/images/step-06-domain.png)
 
@@ -108,7 +108,7 @@ The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The doma
 
 *Declared in `user.tf`. Created by `terraform apply`.*
 
-`user_principal_name` joins the mail nickname to the domain from step 6. `account_enabled` is true. `show_in_address_list` is false, so the test account is not listed as a person. The plan is `1 to add`. The password line is sensitive. Do not paste the sign-in name into notes. It contains the tenant domain.
+`user_principal_name` joins the mail nickname to the domain from step 6. `account_enabled` is true. `show_in_address_list` is false, so the test account isn't listed as a person. The plan is `1 to add`. The password line is sensitive. Don't paste the sign-in name into notes. It contains the tenant domain.
 
 ![test user resource with the password kept in a variable](docs/images/step-07-user.png)
 
@@ -116,7 +116,7 @@ The sign-in name is `junior-dev-zeon` plus the tenant's default domain. The doma
 
 *Declared in `reader_role.tf`. Created by `terraform apply`.*
 
-`scope` is `rg-gov-poc-zeon01`. `principal_id` is the user's object id. Reader can look at resources in this group. It cannot create, change, or delete them. The plan is `1 to add`. The role does not extend to the subscription.
+`scope` is `rg-gov-poc-zeon01`. `principal_id` is the user's object id. Reader can look at resources in this group. It can't create, change, or delete them. The plan is `1 to add`. The role doesn't extend to the subscription.
 
 ![Reader role scoped to the resource group](docs/images/step-08-reader.png)
 
@@ -132,7 +132,7 @@ The built-in policy is "Allowed virtual machine size SKUs." Its effect is Deny. 
 
 *Declared in `budget.tf`. Created by `terraform apply`.*
 
-`monthly-gov-budget` is 50 US dollars per month, starting on the first day of October 2026. Azure requires that start date to be the first day of a month. One alert fires when actual spend reaches 80 percent. The other fires when the forecast reaches 100 percent. Both go to the address in `.env`. The plan hides those blocks because the address is sensitive. The plan is `1 to add`. A budget sends email. It does not stop spending.
+`monthly-gov-budget` is 50 US dollars per month, starting on the first day of October 2026. Azure requires that start date to be the first day of a month. One alert fires when actual spend reaches 80 percent. The other fires when the forecast reaches 100 percent. Both go to the address in `.env`. The plan hides those blocks because the address is sensitive. The plan is `1 to add`. A budget sends email. It doesn't stop spending.
 
 ![budget name, amount 50, and no alert address in the file](docs/images/step-10-amount.png)
 
@@ -142,9 +142,9 @@ The built-in policy is "Allowed virtual machine size SKUs." Its effect is Deny. 
 
 *Read each guardrail from Azure, then run `./scripts/verify.sh`.*
 
-The commands below ask Azure the same questions the script asks. They do not create a virtual machine. Crop each result to the table or the JSON. Do not include a line that contains `/subscriptions/`. Do not drop the `--query` flags. Without them, the sign-in name or the alert address can print.
+The commands below ask Azure the same questions the script asks. They don't create a virtual machine. Crop each result down to the table or the JSON, and keep any line that contains `/subscriptions/` out of the shot. Don't drop the `--query` flags either. Without them, the sign-in name or the alert address can print.
 
-The test user is enabled, and the mail nickname is `junior-dev-zeon`. This query does not ask for the sign-in name.
+The test user is enabled, and the mail nickname is `junior-dev-zeon`. This query doesn't ask for the sign-in name.
 
 ```bash
 az rest --method get \
@@ -155,7 +155,7 @@ az rest --method get \
 
 ![Junior Developer is enabled, mail nickname junior-dev-zeon](docs/images/step-11-user.png)
 
-The only role on `rg-gov-poc-zeon01` is Reader, and it is a user. Reader can look. It cannot create, change, or delete.
+The only role on `rg-gov-poc-zeon01` is Reader, and it is a user. Reader can look. It can't create, change, or delete.
 
 ```bash
 az role assignment list \
@@ -177,7 +177,7 @@ az policy assignment list \
 
 ![restrict-vm-sizes allows the two small sizes](docs/images/step-11-policy.png)
 
-The budget is 50 US dollars a month. One alert is at 80 percent of actual spend. The other is at 100 percent of the forecast. The address is not in this result.
+The budget is 50 US dollars a month. One alert is at 80 percent of actual spend. The other is at 100 percent of the forecast. The address isn't in this result.
 
 ```bash
 az rest --method get \
@@ -200,7 +200,7 @@ az rest --method post \
 
 ![Standard_F16als_v7 is denied by restrict-vm-sizes](docs/images/step-11-denied.png)
 
-Ask again with `Standard_F1als_v7`. That command prints no rows, because the small size is not denied. Then count virtual machines in the group. The count is `0`.
+Ask again with `Standard_F1als_v7`. That command prints no rows, because the small size isn't denied. Then count virtual machines in the group. The count is `0`.
 
 ```bash
 az rest --method post \
@@ -214,7 +214,7 @@ az rest --method post \
 az vm list --resource-group rg-gov-poc-zeon01 --query "length(@)" -o tsv
 ```
 
-![Standard_F1als_v7 is not denied, and the group has no virtual machine](docs/images/step-11-allowed.png)
+![Standard_F1als_v7 isn't denied, and the group has no virtual machine](docs/images/step-11-allowed.png)
 
 The script checks those same facts and prints nine lines.
 
@@ -242,13 +242,13 @@ A passing run looks like this:
 
 *Run `./scripts/teardown.sh`, after you type the resource group name and then `yes`.*
 
-The script prints what it will delete and stops unless the typed name is `rg-gov-poc-zeon01`. `terraform destroy` then shows its plan and waits for `yes`. Destroy removes the budget, the Reader role, the Entra user, the size policy, and the resource group. The user is not inside the group. Terraform removes the user because the user is in the state file.
+The script prints what it will delete and stops unless the typed name is `rg-gov-poc-zeon01`. `terraform destroy` then shows its plan and waits for `yes`. Destroy removes the budget, the Reader role, the Entra user, the size policy, and the resource group. The user isn't inside the group. Terraform removes the user because the user is in the state file.
 
 ```bash
 ./scripts/teardown.sh
 ```
 
-The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, `rg-gov-poc-zeon01` is gone. Run `./scripts/verify.sh` once more and all nine lines print `FAIL`. That is the expected result. There is nothing left for the checks to find, and the next plan wants to add the five resources again.
+The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, `rg-gov-poc-zeon01` is gone. Run `./scripts/verify.sh` once more and all nine lines print `FAIL`. That's the expected result. There is nothing left for the checks to find, and the next plan wants to add the five resources again.
 
 ![Destroy complete, five resources removed](docs/images/step-12-destroy.png)
 
@@ -260,21 +260,21 @@ The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finish
 
 ### Run this as yourself
 
-The names committed in this repository are this proof of concept. Leave [`variables.tf`](variables.tf). Put your owner word in the copy you run. The sequence is the same as the [naming standard](https://github.com/zsociety47/cloud-projects/blob/main/standards/NAMING-STANDARD.md): type, project, environment, then **your** owner word and number (`rg-gov-poc-zeon01` becomes `rg-gov-poc-ada01`).
+The names in this repository are the ones I used for my own proof of concept, so don't edit [`variables.tf`](variables.tf). Make your own copy and swap my short name (`zeon`) for yours. The names follow the [naming standard](https://github.com/zsociety47/cloud-projects/blob/main/standards/NAMING-STANDARD.md): type, project, environment, then your short name and a number (`rg-gov-poc-zeon01` becomes `rg-gov-poc-ada01`).
 
 | Open this | Do this |
 |---|---|
-| [`terraform.tfvars.example`](terraform.tfvars.example) | Copy to `terraform.tfvars` (gitignored). Change `resource_group_name`, `user_mail_nickname`, and `tags.owner`. The mail nickname must be unique in your tenant. Put your owner word in it. |
+| [`terraform.tfvars.example`](terraform.tfvars.example) | Copy to `terraform.tfvars` (gitignored). Change `resource_group_name`, `user_mail_nickname`, and `tags.owner`. The mail nickname has to be unique in your tenant, so put your short name in it. |
 | `.env` | Create it in this folder (gitignored). Copy the two `TF_VAR_` lines from [Project Steps](#project-steps). Put your password and alert address there, not in `terraform.tfvars`. |
-| [`variables.tf`](variables.tf) | Read only. These defaults are this proof. |
+| [`variables.tf`](variables.tf) | Leave this one alone. Its defaults are the names from my own proof. |
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-You need Terraform 1.15.x, the Azure command-line interface (CLI), and a current `az login`. Run these from the repository root, in this order. Each group is one action. Read what you should see before you start the next group.
+You need Terraform 1.15.x, the Azure command-line interface (CLI), and a current `az login`. Run these from the repository root, in this order. Do one group at a time, and check what you see before you start the next.
 
-If Microsoft Entra ID asks for multi-factor authentication, approve it in the browser. Do not add `--use-device-code` to `az login`. That flow is often blocked when the computer is not registered with Entra ID.
+If Microsoft Entra ID asks for multi-factor authentication, approve it in the browser. Don't add `--use-device-code` to `az login`. That flow is often blocked when the computer isn't registered with Entra ID.
 
 ### Sign in for this terminal
 
@@ -287,11 +287,11 @@ source .env
 set +a
 ```
 
-You should see no output. Do not print either value.
+You should see no output. Don't print either value.
 
 ### Download the providers
 
-This is step 2. It runs once per machine.
+This is step 2. You only run it once per machine.
 
 ```bash
 terraform init
@@ -307,7 +307,7 @@ Every file is already in the folder, so this one plan covers steps 5 through 10.
 terraform plan
 ```
 
-You should see `5 to add, 0 to change, 0 to destroy`: the resource group, the test user, the Reader role, the size policy, and the budget. Read the plan before you type `yes`. A line that contains `/subscriptions/` is not a screenshot.
+You should see `5 to add, 0 to change, 0 to destroy`: the resource group, the test user, the Reader role, the size policy, and the budget. Read the plan before you type `yes`. Don't screenshot any line that contains `/subscriptions/`.
 
 ### Create the five controls
 
@@ -321,7 +321,7 @@ Type `yes` only if the plan still says `5 to add`. The size policy takes about t
 
 These are the commands in step 11, in the same order. Run one, read the result, then run the next. None of them creates a virtual machine.
 
-| Command in step 11 | What you are checking | A pass looks like |
+| Command in step 11 | What you're checking | A pass looks like |
 |---|---|---|
 | The user query | The test account is on and usable | `Junior Developer`, enabled, nickname `junior-dev-zeon` |
 | The role query | Who can touch this group | One row: `Reader`, `User` |
@@ -348,7 +348,7 @@ This is step 12. The script stops unless the typed name is `rg-gov-poc-zeon01`. 
 ./scripts/teardown.sh
 ```
 
-The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, the last line is `Destroy complete! Resources: 5 destroyed.` The next plan is `5 to add` again. Leave any `/subscriptions/` line out of a screenshot.
+The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finishes, the last line is `Destroy complete! Resources: 5 destroyed.` The next plan is `5 to add` again. Keep any `/subscriptions/` line out of your screenshots.
 
 ### Prove it in the portal
 
@@ -360,9 +360,9 @@ The destroy plan should be `0 to add, 0 to change, 5 to destroy`. When it finish
 | 4. The size policy is enforced | `rg-gov-poc-zeon01`, **Policies** | `restrict-vm-sizes`, allowed sizes `Standard_F1als_v7` and `Standard_F1as_v7` |
 | 5. The budget has both alerts | `rg-gov-poc-zeon01`, **Budgets** | `monthly-gov-budget`, amount 50. Crop the alert address |
 | 6. The large size would be denied | `./scripts/verify.sh` check 6 | PASS for `Standard_F16als_v7` |
-| 7. The small size is not denied | `./scripts/verify.sh` check 7 | PASS for `Standard_F1als_v7` |
+| 7. The small size isn't denied | `./scripts/verify.sh` check 7 | PASS for `Standard_F1als_v7` |
 | 8. No virtual machine exists | `rg-gov-poc-zeon01` | No virtual machine in the group |
-| 9. Teardown removed the group | **Resource groups** | `rg-gov-poc-zeon01` is not in the list |
+| 9. Teardown removed the group | **Resource groups** | `rg-gov-poc-zeon01` isn't in the list |
 
 ---
 
@@ -392,7 +392,7 @@ flowchart LR
 
 **How to read this diagram**
 
-- **Solid arrow:** Junior Developer can read `rg-gov-poc-zeon01`. That is the only access the user is granted.
+- **Solid arrow:** Junior Developer can read `rg-gov-poc-zeon01`. That's the only access the user is granted.
 - **Dashed arrow:** Terraform, from the laptop, creates the group and the user.
 - **Blue:** the resource group, the size policy, and the budget. **Green:** the test user. **Gray:** the laptop running Terraform.
 - The policy denies any other virtual machine size inside the group. The budget sends email. Neither one creates a virtual machine.
@@ -417,7 +417,7 @@ A test user can be limited to reading one resource group, policy can deny an ove
 | 4 | `restrict-vm-sizes` allows only the two small sizes | `./scripts/verify.sh` check 4 | ✅ [verify output](#step-11-check-the-live-controls) |
 | 5 | `monthly-gov-budget` is 50 dollars with both alerts | `./scripts/verify.sh` check 5 | ✅ [verify output](#step-11-check-the-live-controls) |
 | 6 | `Standard_F16als_v7` is denied | `./scripts/verify.sh` check 6 | ✅ [verify output](#step-11-check-the-live-controls) |
-| 7 | `Standard_F1als_v7` is not denied | `./scripts/verify.sh` check 7 | ✅ [verify output](#step-11-check-the-live-controls) |
+| 7 | `Standard_F1als_v7` isn't denied | `./scripts/verify.sh` check 7 | ✅ [verify output](#step-11-check-the-live-controls) |
 | 8 | The group has no virtual machine | `./scripts/verify.sh` check 8 | ✅ [verify output](#step-11-check-the-live-controls) |
 | 9 | After apply, `terraform plan` reports no changes | `./scripts/verify.sh` check 9 | ✅ [verify output](#step-11-check-the-live-controls) |
 | 10 | Teardown removes the resource group and the user | `az group exists --name rg-gov-poc-zeon01` is false, and Entra lists no Junior Developer | ✅ [destroy step](#step-12-remove-it) |
@@ -449,22 +449,22 @@ Checks 1 through 9 were recorded while the group existed. After teardown, the sa
 
 - **The state file stays on the machine.** `terraform.tfstate` holds the test user's password and resource identifiers, including the subscription id. `.gitignore` excludes it.
 - **The password and the alert address are environment variables.** `variables.tf` has no default for either one. `.env` is gitignored.
-- **The subscription id is an environment variable.** `provider.tf` does not contain it.
-- **Reader is scoped to one group.** The test user cannot create, change, or delete resources there, and the role does not extend to the subscription.
+- **The subscription id is an environment variable.** `provider.tf` doesn't contain it.
+- **Reader is scoped to one group.** The test user can't create, change, or delete resources there, and the role doesn't extend to the subscription.
 - **The size policy denies anything off the allow list.** The effect of the built-in definition is Deny, and `enforce = true` applies it. No virtual machine is created to prove that.
-- **The budget does not stop spending.** It sends email at 80 percent of actual spend and at 100 percent of the forecast.
-- **The test user is not in the address list.** `show_in_address_list` is false.
+- **The budget doesn't stop spending.** It sends email at 80 percent of actual spend and at 100 percent of the forecast.
+- **The test user isn't in the address list.** `show_in_address_list` is false.
 - **The tenant domain is looked up, not stored.** The sign-in name is built at apply time.
 
 ## Cost
 
-A resource group, a role assignment, a policy assignment, a budget, and an Entra user have no hourly charge. This build has no virtual machine and no public Internet Protocol address. Delete the group when you are done so the state file and the subscription stay in agreement. Prices were checked in October 2026.
+A resource group, a role assignment, a policy assignment, a budget, and an Entra user have no hourly charge. This build has no virtual machine and no public Internet Protocol address. Delete the group when you're done so the state file and the subscription stay in agreement. Prices were checked in October 2026.
 
 ## Going further
 
 - Sign in as Junior Developer and show that creating a resource in the group is denied by Reader, not only by policy.
 - Add a second alert contact only if a second mailbox should receive the budget mail.
-- Store `terraform.tfstate` in a remote backend so the password is not only on one laptop. The backend still has to keep that password out of Git.
+- Store `terraform.tfstate` in a remote backend so the password isn't only on one laptop. The backend still has to keep that password out of Git.
 
 ---
 
@@ -473,11 +473,11 @@ A resource group, a role assignment, a policy assignment, a budget, and an Entra
 *For engineers: what actually happened while building this, including the errors.*
 
 - **`East US` is stored as `eastus`.** `variables.tf` sets `location = "East US"`. The plan shows `location = "eastus"`. Those are the same region.
-- **The sizes this subscription offers are not the sizes `az vm list-sizes` prints.** The first allow list was `Standard_B1s` and `Standard_B1ms`, with `Standard_D2s_v3` as the blocked size. `az vm list-skus` for this subscription does not offer those. The allow list is `Standard_F1als_v7` and `Standard_F1as_v7`. The blocked size in the check is `Standard_F16als_v7`.
+- **The sizes this subscription offers aren't the sizes `az vm list-sizes` prints.** The first allow list was `Standard_B1s` and `Standard_B1ms`, with `Standard_D2s_v3` as the blocked size. `az vm list-skus` for this subscription doesn't offer those. The allow list is `Standard_F1als_v7` and `Standard_F1as_v7`. The blocked size in the check is `Standard_F16als_v7`.
 - **The user id and the object id are different shapes.** `azuread_user.junior.id` is a path that starts with `/users/`. Role assignment needs `object_id`, which is the identifier alone.
-- **A plan of the user prints the sign-in name.** That name contains the tenant domain, so it is not copied into this README. The password line is marked sensitive.
+- **A plan of the user prints the sign-in name.** That name contains the tenant domain, so it isn't copied into this README. The password line is marked sensitive.
 - **Policy assignment took about two minutes.** `restrict-vm-sizes` reported creation complete after 1 minute 52 seconds. The definition is the built-in "Allowed virtual machine size SKUs" policy. Its effect is Deny. The only parameter is `listOfAllowedSKUs`.
-- **The budget plan hides the alerts.** `contact_emails` is sensitive, so Terraform does not print the notification blocks. The file still sets 80 percent Actual and 100 percent Forecasted. Azure accepted both. The address is not in this README.
-- **The size check does not create a virtual machine.** `./scripts/verify.sh` posts the size to the policy restriction API. A deny for `restrict-vm-sizes` is a pass for `Standard_F16als_v7`. No deny is a pass for `Standard_F1als_v7`. After both calls, the group still had no virtual machine.
+- **The budget plan hides the alerts.** `contact_emails` is sensitive, so Terraform doesn't print the notification blocks. The file still sets 80 percent Actual and 100 percent Forecasted. Azure accepted both. The address isn't in this README.
+- **The size check doesn't create a virtual machine.** `./scripts/verify.sh` posts the size to the policy restriction API. A deny for `restrict-vm-sizes` is a pass for `Standard_F16als_v7`. No deny is a pass for `Standard_F1als_v7`. After both calls, the group still had no virtual machine.
 - **Destroy removed five resources.** The budget, the Reader role, the Entra user, the size policy, and then the resource group. `az group exists --name rg-gov-poc-zeon01` printed `false`. A second `./scripts/verify.sh` printed FAIL on all nine lines, and `terraform plan` was `5 to add`.
-- **A plan prints full resource identifiers.** Role and policy plans include the subscription id. Those strings are not pasted into this README.
+- **A plan prints full resource identifiers.** Role and policy plans include the subscription id. Those strings aren't pasted into this README.
